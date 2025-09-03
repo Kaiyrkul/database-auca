@@ -1,0 +1,41 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# CREATE TABLE students (
+postgres(#     student_id SERIAL PRIMARY KEY,
+postgres(#     first_name VARCHAR(50) NOT NULL,
+postgres(#     last_name VARCHAR(50) NOT NULL,
+postgres(#     email VARCHAR(100) UNIQUE NOT NULL,
+postgres(#     faculty VARCHAR(100)
+postgres(# );
+CREATE TABLE
+postgres=# \d students
+                                                          "public.students"
+            |                        |                    |              NULL |                             
+------------+------------------------+--------------------+-------------------+----------------------------------------------
+ student_id | integer                |                    | not null          | nextval('students_student_id_seq'::regclass)
+ first_name | character varying(50)  |                    | not null          |
+ last_name  | character varying(50)  |                    | not null          |
+ email      | character varying(100) |                    | not null          |
+ faculty    | character varying(100) |                    |                   |
+    "students_pkey" PRIMARY KEY, btree (student_id)
+    "students_email_key" UNIQUE CONSTRAINT, btree (email)
+
+
+postgres=# ALTER TABLE students ADD COLUMN phone_number VARCHAR(20);
+ALTER TABLE
+postgres=# ALTER TABLE students DROP COLUMN faculty;
+ALTER TABLE
+postgres=# DROP TABLE IF EXISTS students;
+DROP TABLE
+postgres=# \q
