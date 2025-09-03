@@ -1,0 +1,32 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# CREATE DATABASE university_db;
+CREATE DATABASE
+postgres=# \l
+                                                                                  
+               |          |           |                  |     LC_COLLATE      |      LC_CTYPE       |        |         ICU |                  
+---------------+----------+-----------+------------------+---------------------+---------------------+--------+-------------+-----------------------
+ postgres      | postgres | UTF8      | libc             | Russian_Russia.1251 | Russian_Russia.1251 |        |             |
+ template0     | postgres | UTF8      | libc             | Russian_Russia.1251 | Russian_Russia.1251 |        |             | =c/postgres          +
+               |          |           |                  |                     |                     |        |             | postgres=CTc/postgres
+ template1     | postgres | UTF8      | libc             | Russian_Russia.1251 | Russian_Russia.1251 |        |             | =c/postgres          +
+               |          |           |                  |                     |                     |        |             | postgres=CTc/postgres
+ university_db | postgres | UTF8      | libc             | Russian_Russia.1251 | Russian_Russia.1251 |        |             |
+
+
+postgres=# DROP DATABASE university_db;
+DROP DATABASE
+postgres=# \q
+PS C:\Users\User>
+
