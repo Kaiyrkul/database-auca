@@ -1,0 +1,125 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# DROP TABLE IF EXISTS authors CASCADE;
+ЗАМЕЧАНИЕ:  таблица "authors" не существует, пропускается
+DROP TABLE
+postgres=# CREATE TABLE authors (
+postgres(#     author_id SERIAL PRIMARY KEY,
+postgres(#     first_name VARCHAR(50) NOT NULL,
+postgres(#     last_name VARCHAR(50) NOT NULL,
+postgres(#     birth_date DATE
+postgres(# );
+CREATE TABLE
+postgres=# DROP TABLE IF EXISTS books CASCADE;
+ЗАМЕЧАНИЕ:  таблица "books" не существует, пропускается
+DROP TABLE
+postgres=# CREATE TABLE books (
+postgres(#     book_id SERIAL PRIMARY KEY,
+postgres(#     title VARCHAR(200) NOT NULL,
+postgres(#     isbn VARCHAR(13) UNIQUE,
+postgres(#     publication_year INTEGER,
+postgres(#     available_copies INTEGER DEFAULT 1
+postgres(# );
+CREATE TABLE
+postgres=# DROP TABLE IF EXISTS members CASCADE;
+ЗАМЕЧАНИЕ:  таблица "members" не существует, пропускается
+DROP TABLE
+postgres=# CREATE TABLE members (
+postgres(#     member_id SERIAL PRIMARY KEY,
+postgres(#     first_name VARCHAR(50) NOT NULL,
+postgres(#     last_name VARCHAR(50) NOT NULL,
+postgres(#     email VARCHAR(100) UNIQUE NOT NULL,
+postgres(#     phone VARCHAR(15),
+postgres(#     membership_date DATE DEFAULT CURRENT_DATE
+postgres(# );
+CREATE TABLE
+postgres=#
+postgres=# DROP TABLE IF EXISTS book_authors;
+ЗАМЕЧАНИЕ:  таблица "book_authors" не существует, пропускается
+DROP TABLE
+postgres=# CREATE TABLE book_authors (
+postgres(#     book_id INTEGER,
+postgres(#     author_id INTEGER,
+postgres(#     PRIMARY KEY (book_id, author_id),
+postgres(#     FOREIGN KEY (book_id) REFERENCES books (book_id),
+postgres(#     FOREIGN KEY (author_id) REFERENCES authors (author_id)
+postgres(# );
+CREATE TABLE
+postgres=# CREATE TABLE loans (
+postgres(#     loan_id SERIAL PRIMARY KEY,
+postgres(#     member_id INTEGER NOT NULL,
+postgres(#     book_id INTEGER NOT NULL,
+postgres(#     loan_date DATE DEFAULT CURRENT_DATE,
+postgres(#     due_date DATE NOT NULL,
+postgres(#     FOREIGN KEY (member_id) REFERENCES members (member_id),
+postgres(#     FOREIGN KEY (book_id) REFERENCES books (book_id)
+postgres(# );
+CREATE TABLE
+postgres=# \d books
+                                                           "public.books"
+                  |                        |                    |              NULL |                          
+------------------+------------------------+--------------------+-------------------+----------------------------------------
+ book_id          | integer                |                    | not null          | nextval('books_book_id_seq'::regclass)
+ title            | character varying(200) |                    | not null          |
+ isbn             | character varying(13)  |                    |                   |
+ publication_year | integer                |                    |                   |
+ available_copies | integer                |                    |                   | 1
+    "books_pkey" PRIMARY KEY, btree (book_id)
+    "books_isbn_key" UNIQUE CONSTRAINT, btree (isbn)
+    TABLE "book_authors" CONSTRAINT "book_authors_book_id_fkey" FOREIGN KEY (book_id) REFERENCES books(book_id)
+    TABLE "loans" CONSTRAINT "loans_book_id_fkey" FOREIGN KEY (book_id) REFERENCES books(book_id)
+
+
+postgres=# \d loans
+                                                "public.loans"
+           |         |                    |              NULL |                          
+-----------+---------+--------------------+-------------------+----------------------------------------
+ loan_id   | integer |                    | not null          | nextval('loans_loan_id_seq'::regclass)
+ member_id | integer |                    | not null          |
+ book_id   | integer |                    | not null          |
+ loan_date | date    |                    |                   | CURRENT_DATE
+ due_date  | date    |                    | not null          |
+    "loans_pkey" PRIMARY KEY, btree (loan_id)
+    "loans_book_id_fkey" FOREIGN KEY (book_id) REFERENCES books(book_id)
+    "loans_member_id_fkey" FOREIGN KEY (member_id) REFERENCES members(member_id)
+
+
+postgres=# INSERT INTO authors (first_name, last_name) VALUES
+postgres-# ('J.K.', 'Rowling'),
+postgres-# ('Stephen', 'King');
+INSERT 0 2
+postgres=# INSERT INTO books (title, isbn) VALUES
+postgres-# ('Harry Potter and the Sorcerer''s Stone', '9780439708180'),
+postgres-# ('The Shining', '9780307887256');
+INSERT 0 2
+postgres=# INSERT INTO book_authors (book_id, author_id) VALUES
+postgres-# (1, 1),
+postgres-# (2, 2);
+INSERT 0 2
+postgres=#
+postgres=# SELECT
+postgres-#     b.title,
+postgres-#     b.publication_year,
+postgres-#     a.first_name,
+postgres-#     a.last_name
+postgres-# FROM books b
+postgres-# JOIN book_authors ba ON b.book_id = ba.book_id
+postgres-# JOIN authors a ON ba.author_id = a.author_id;
+                 title                 | publication_year | first_name | last_name
+---------------------------------------+------------------+------------+-----------
+ Harry Potter and the Sorcerer's Stone |                  | J.K.       | Rowling
+ The Shining                           |                  | Stephen    | King
+
+
+postgres=# \q
