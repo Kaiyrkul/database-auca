@@ -1,0 +1,55 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# DROP TABLE IF EXISTS departments CASCADE;
+DROP TABLE
+postgres=# CREATE TABLE departments (
+postgres(#     dept_id SERIAL PRIMARY KEY,
+postgres(#     dept_name VARCHAR(100) NOT NULL,
+postgres(#     location VARCHAR(100)
+postgres(# );
+CREATE TABLE
+postgres=# DROP TABLE IF EXISTS employees;
+ЗАМЕЧАНИЕ:  таблица "employees" не существует, пропускается
+DROP TABLE
+postgres=# CREATE TABLE employees (
+postgres(#    emp_id SERIAL PRIMARY KEY,
+postgres(#    first_name VARCHAR(50) NOT NULL,
+postgres(#    last_name VARCHAR(50) NOT NULL,
+postgres(#    dept_id INTEGER REFERENCES departments(dept_id)
+postgres(# );
+CREATE TABLE
+postgres=# INSERT INTO departments (dept_name, location) VALUES
+postgres-# ('Engineering', 'Building A'),
+postgres-# ('Marketing', 'Building B');
+INSERT 0 2
+postgres=# INSERT INTO employees (first_name, last_name, dept_id) VALUES
+postgres-# ('John', 'Smith', 1);
+INSERT 0 1
+postgres=# -- Эта вставка вызовет ошибку, так как отдел с ID 99 не существует
+postgres=# INSERT INTO employees (first_name, last_name, dept_id) VALUES
+postgres-# ('Jane', 'Doe', 99);
+ОШИБКА:  INSERT или UPDATE в таблице "employees" нарушает ограничение внешнего ключа "employees_dept_id_fkey"
+ПОДРОБНОСТИ:  Ключ (dept_id)=(99) отсутствует в таблице "departments".
+postgres=# SELECT
+postgres-#     e.first_name,
+postgres-#     e.last_name,
+postgres-#     d.dept_name
+postgres-# FROM employees e
+postgres-# JOIN departments d ON e.dept_id = d.dept_id;
+ first_name | last_name |  dept_name
+------------+-----------+-------------
+ John       | Smith     | Engineering
+
+
+postgres=# \q
