@@ -1,0 +1,168 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# SELECT * FROM students;
+ student_id | first_name | last_name |        email         | enrollment_date
+------------+------------+-----------+----------------------+-----------------
+          1 | Alice      | Johnson   | alice@university.edu | 2025-10-07
+          3 | Carol      | Wilson    | carol@university.edu | 2025-10-07
+
+
+postgres=# SELECT * FROM courses;
+ course_id | course_code |         course_name         | credits | instructor
+-----------+-------------+-----------------------------+---------+------------
+         1 | CS101       | Introduction to Programming |       3 | Dr. Brown
+         2 | CS201       | Data Structures             |       4 | Dr. Davis
+         3 | MATH101     | Calculus I                  |       4 | Dr. Wilson
+
+
+postgres=# SELECT * FROM student_enrollments;
+ enrollment_id | student_id | course_id | enrollment_date | grade
+---------------+------------+-----------+-----------------+-------
+             1 |          1 |         1 | 2025-10-07      | A
+             5 |          3 |         2 | 2025-10-07      | A
+             6 |          3 |         3 | 2025-10-07      | A-
+             2 |          1 |         2 | 2025-10-07      | A+
+
+
+postgres=# SELECT
+postgres-#     first_name,
+postgres-#     last_name,
+postgres-#     email
+postgres-# FROM
+postgres-#     students
+postgres-# WHERE
+postgres-#     email LIKE '%@university.edu';
+ first_name | last_name |        email
+------------+-----------+----------------------
+ Alice      | Johnson   | alice@university.edu
+ Carol      | Wilson    | carol@university.edu
+
+
+postgres=# SELECT
+postgres-#     course_name,
+postgres-#     credits
+postgres-# FROM
+postgres-#     courses
+postgres-# ORDER BY
+postgres-#     credits DESC -- Сортировка по убыванию (Descending)
+postgres-# LIMIT 2;
+   course_name   | credits
+-----------------+---------
+ Data Structures |       4
+ Calculus I      |       4
+
+
+postgres=# SELECT
+postgres-#     s.first_name || ' ' || s.last_name AS student_name,
+postgres-#     c.course_name,
+postgres-#     se.grade
+postgres-# FROM
+postgres-#     students s
+postgres-# JOIN
+postgres-#     student_enrollments se ON s.student_id = se.student_id
+postgres-# JOIN
+postgres-#     courses c ON se.course_id = c.course_id
+postgres-# ORDER BY
+postgres-#     student_name;
+ student_name  |         course_name         | grade
+---------------+-----------------------------+-------
+ Alice Johnson | Introduction to Programming | A
+ Alice Johnson | Data Structures             | A+
+ Carol Wilson  | Data Structures             | A
+ Carol Wilson  | Calculus I                  | A-
+
+
+postgres=# INSERT INTO courses (course_code, course_name, credits, instructor) VALUES
+postgres-# ('PHIL101', 'Introduction to Philosophy', 3, 'Dr. Zizek');
+INSERT 0 1
+postgres=#
+postgres=# SELECT
+postgres-#     c.course_name,
+postgres-#     s.first_name || ' ' || s.last_name AS student_name
+postgres-# FROM
+postgres-#     courses c
+postgres-# LEFT JOIN -- Используем LEFT JOIN
+postgres-#     student_enrollments se ON c.course_id = se.course_id
+postgres-# LEFT JOIN
+postgres-#     students s ON se.student_id = s.student_id
+postgres-# WHERE
+postgres-#     s.student_id IS NULL;
+ОШИБКА:  для символа с последовательностью байт 0x98 из кодировки "WIN1251" нет эквивалента в "UTF8"
+postgres=# SELECT
+postgres-#     c.course_name,
+postgres-#     COUNT(se.student_id) AS total_students
+postgres-# FROM
+postgres-#     courses c
+postgres-# JOIN
+postgres-#     student_enrollments se ON c.course_id = se.course_id
+postgres-# GROUP BY
+postgres-#     c.course_name -- Группируем по имени курса
+postgres-# ORDER BY
+postgres-#     total_students DESC;
+         course_name         | total_students
+-----------------------------+----------------
+ Data Structures             |              2
+ Introduction to Programming |              1
+ Calculus I                  |              1
+
+
+postgres=# SELECT
+postgres-#     c.course_name,
+postgres-#     COUNT(se.student_id) AS total_students
+postgres-# FROM
+postgres-#     courses c
+postgres-# JOIN
+postgres-#     student_enrollments se ON c.course_id = se.course_id
+postgres-# GROUP BY
+postgres-#     c.course_name
+postgres-# HAVING
+postgres-#     COUNT(se.student_id) > 1;
+   course_name   | total_students
+-----------------+----------------
+ Data Structures |              2
+
+
+postgres=# SELECT
+postgres-#     course_name,
+postgres-#     credits,
+postgres-#     CASE
+postgres-#         WHEN credits >= 4 THEN 'Major Course' -- Если 4 или больше
+postgres-#         ELSE 'Elective Course' -- Иначе
+postgres-#     END AS course_type
+postgres-# FROM
+postgres-#     courses
+postgres-# ORDER BY
+postgres-#     credits DESC;
+ОШИБКА:  для символа с последовательностью байт 0x98 из кодировки "WIN1251" нет эквивалента в "UTF8"
+postgres=# SELECT
+postgres-#     course_name,
+postgres-#     credits,
+postgres-#     CASE
+postgres-#         WHEN credits >= 4 THEN 'Major Course'
+postgres-# ELSE 'Elective Course'
+postgres-# END AS course_type
+postgres-# FROM
+postgres-#     courses
+postgres-# ORDER BY
+postgres-#     credits DESC;
+         course_name         | credits |   course_type
+-----------------------------+---------+-----------------
+ Data Structures             |       4 | Major Course
+ Calculus I                  |       4 | Major Course
+ Introduction to Programming |       3 | Elective Course
+ Introduction to Philosophy  |       3 | Elective Course
+
+
+postgres=# \q
+PS C:\Users\User>
