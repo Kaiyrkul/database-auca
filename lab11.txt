@@ -1,0 +1,110 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# \encoding WIN1251
+postgres=# SELECT * FROM student_enrollments;
+ enrollment_id | student_id | course_id | enrollment_date | grade
+---------------+------------+-----------+-----------------+-------
+             1 |          1 |         1 | 2025-10-07      | A
+             5 |          3 |         2 | 2025-10-07      | A
+             6 |          3 |         3 | 2025-10-07      | A-
+             2 |          1 |         2 | 2025-10-07      | A+
+
+
+postgres=# SELECT
+postgres-#     COUNT(*) AS total_enrollments, -- Общее количество строк (включая дубликаты студентов на разных курсах)
+postgres-#     COUNT(DISTINCT student_id) AS unique_students -- Количество уникальных student_id
+postgres-# FROM
+postgres-#     student_enrollments;
+ total_enrollments | unique_students
+-------------------+-----------------
+                 4 |               2
+
+
+postgres=# SELECT
+postgres-#     MIN(enrollment_date) AS first_enrollment_date,
+postgres-#     MAX(enrollment_date) AS latest_enrollment_date
+postgres-# FROM
+postgres-#     student_enrollments;
+ first_enrollment_date | latest_enrollment_date
+-----------------------+------------------------
+ 2025-10-07            | 2025-10-07
+
+
+postgres=# SELECT
+postgres-#     c.course_name,
+postgres-#     COUNT(se.student_id) AS student_count
+postgres-# FROM
+postgres-#     student_enrollments se
+postgres-# JOIN
+postgres-#     courses c ON se.course_id = c.course_id
+postgres-# GROUP BY
+postgres-#     c.course_name -- Группируем результаты по имени курса
+postgres-# ORDER BY
+postgres-#     student_count DESC;
+         course_name         | student_count
+-----------------------------+---------------
+ Data Structures             |             2
+ Introduction to Programming |             1
+ Calculus I                  |             1
+
+
+postgres=# -- Предполагаем, что instructor в таблице courses - это имя и фамилия
+postgres=# SELECT
+postgres-#     instructor,
+postgres-#     COUNT(course_id) AS total_courses_taught
+postgres-# FROM
+postgres-#     courses
+postgres-# GROUP BY
+postgres-#     instructor
+postgres-# ORDER BY
+postgres-#     total_courses_taught DESC;
+ instructor | total_courses_taught
+------------+----------------------
+ Dr. Brown  |                    1
+ Dr. Davis  |                    1
+ Dr. Zizek  |                    1
+ Dr. Wilson |                    1
+
+
+postgres=# SELECT
+postgres-#     instructor,
+postgres-#     COUNT(course_id) AS total_courses_taught
+postgres-# FROM
+postgres-#     courses
+postgres-# GROUP BY
+postgres-#     instructor
+postgres-# HAVING
+postgres-#     COUNT(course_id) > 1; -- Фильтруем группы, оставляя только тех, у кого больше 1 курса
+ instructor | total_courses_taught
+------------+----------------------
+
+
+postgres=# SELECT
+postgres-#     instructor,
+postgres-#     COUNT(CASE WHEN credits >= 4 THEN 1 END) AS major_courses_count,
+postgres-#     COUNT(CASE WHEN credits < 4 THEN 1 END) AS elective_courses_count
+postgres-# FROM
+postgres-#     courses
+postgres-# GROUP BY
+postgres-#     instructor;
+ instructor | major_courses_count | elective_courses_count
+------------+---------------------+------------------------
+ Dr. Brown  |                   0 |                      1
+ Dr. Davis  |                   1 |                      0
+ Dr. Zizek  |                   0 |                      1
+ Dr. Wilson |                   1 |                      0
+
+
+postgres=# \q
+PS C:\Users\User>
