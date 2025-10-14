@@ -1,0 +1,127 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# INSERT INTO students (first_name, last_name, email) VALUES
+postgres-# ('David', 'Lee', 'david@university.edu');
+INSERT 0 1
+postgres=# INSERT INTO courses (course_code, course_name, credits, instructor) VALUES
+postgres-# ('ART101', 'Art History Basics', 3, 'Dr. Bell');
+INSERT 0 1
+postgres=# SELECT
+postgres-#     c.course_name,
+postgres-#     c.instructor
+postgres-# FROM
+postgres-#     courses c
+postgres-# INNER JOIN
+postgres-#     courses c2 ON c.course_code = c2.course_code;
+         course_name         | instructor
+-----------------------------+------------
+ Introduction to Programming | Dr. Brown
+ Data Structures             | Dr. Davis
+ Calculus I                  | Dr. Wilson
+ Introduction to Philosophy  | Dr. Zizek
+ Art History Basics          | Dr. Bell
+
+
+postgres=# SELECT
+postgres-#     course_name,
+postgres-#     instructor
+postgres-# FROM
+postgres-#     courses
+postgres-# WHERE
+postgres-#     instructor IS NOT NULL;
+         course_name         | instructor
+-----------------------------+------------
+ Introduction to Programming | Dr. Brown
+ Data Structures             | Dr. Davis
+ Calculus I                  | Dr. Wilson
+ Introduction to Philosophy  | Dr. Zizek
+ Art History Basics          | Dr. Bell
+
+
+postgres=# SELECT
+postgres-#     s.first_name || ' ' || s.last_name AS student_name,
+postgres-#     c.course_name,
+postgres-#     se.grade
+postgres-# FROM
+postgres-#     students s
+postgres-# INNER JOIN
+postgres-#     student_enrollments se ON s.student_id = se.student_id -- 1. Связь Студент-Зачисление
+postgres-# INNER JOIN
+postgres-#     courses c ON se.course_id = c.course_id -- 2. Связь Зачисление-Курс
+postgres-# ORDER BY
+postgres-#     student_name, c.course_name;
+ student_name  |         course_name         | grade
+---------------+-----------------------------+-------
+ Alice Johnson | Data Structures             | A+
+ Alice Johnson | Introduction to Programming | A
+ Carol Wilson  | Calculus I                  | A-
+ Carol Wilson  | Data Structures             | A
+
+
+postgres=# SELECT
+postgres-#     s.first_name || ' ' || s.last_name AS student_name,
+postgres-#     c.course_name
+postgres-# FROM
+postgres-#     students s
+postgres-# LEFT JOIN -- Гарантирует, что ВСЕ строки из students (левая) будут возвращены
+postgres-#     student_enrollments se ON s.student_id = se.student_id
+postgres-# LEFT JOIN
+postgres-#     courses c ON se.course_id = c.course_id
+postgres-# ORDER BY
+postgres-#     student_name;
+ student_name  |         course_name
+---------------+-----------------------------
+ Alice Johnson | Introduction to Programming
+ Alice Johnson | Data Structures
+ Carol Wilson  | Data Structures
+ Carol Wilson  | Calculus I
+ David Lee     |
+
+
+postgres=# SELECT
+postgres-#     s.first_name || ' ' || s.last_name AS student_name,
+postgres-#     se.enrollment_id -- Будет NULL для несвязанных
+postgres-# FROM
+postgres-#     students s
+postgres-# LEFT JOIN
+postgres-#     student_enrollments se ON s.student_id = se.student_id
+postgres-# WHERE
+postgres-#     se.enrollment_id IS NULL; -- Фильтруем, оставляя только те строки, где правая часть (enrollment) пуста
+ student_name | enrollment_id
+--------------+---------------
+ David Lee    |
+
+
+postgres=# SELECT
+postgres-#     c.course_name,
+postgres-#     s.first_name || ' ' || s.last_name AS student_name
+postgres-# FROM
+postgres-#     courses c
+postgres-# LEFT JOIN
+postgres-#     student_enrollments se ON c.course_id = se.course_id
+postgres-# LEFT JOIN
+postgres-#     students s ON se.student_id = s.student_id
+postgres-# ORDER BY
+postgres-#     c.course_name;
+         course_name         | student_name
+-----------------------------+---------------
+ Art History Basics          |
+ Calculus I                  | Carol Wilson
+ Data Structures             | Carol Wilson
+ Data Structures             | Alice Johnson
+ Introduction to Philosophy  |
+ Introduction to Programming | Alice Johnson
+
+
+postgres=# \q
