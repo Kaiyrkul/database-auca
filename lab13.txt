@@ -1,0 +1,108 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# SELECT
+postgres-#     first_name,
+postgres-#     last_name
+postgres-# FROM
+postgres-#     students
+postgres-# WHERE
+postgres-#     student_id IN (
+postgres(#         -- Подзапрос возвращает список ID студентов, записанных на курс MATH101
+postgres(#         SELECT
+postgres(#             student_id
+postgres(#         FROM
+postgres(#             student_enrollments
+postgres(#         WHERE
+postgres(#             course_id = (
+postgres(#                 -- Вложенный скалярный подзапрос, который находит ID курса MATH101
+postgres(#                 SELECT course_id FROM courses WHERE course_code = 'MATH101'
+postgres(#             )
+postgres(#     );
+ first_name | last_name
+------------+-----------
+ Carol      | Wilson
+
+
+postgres=# WITH course_stats AS (
+postgres(#     -- 1. Определяем CTE: считаем среднюю оценку (допустим, A=4, B=3, C=2...) для каждого курса
+postgres(#     -- Для простоты будем считать средний балл только по оценке 'A' vs 'B'
+postgres(#     SELECT
+postgres(#         course_id,
+postgres(#         COUNT(*) AS total_enrollments
+postgres(#     FROM
+postgres(#         student_enrollments
+postgres(#     GROUP BY
+postgres(#         course_id
+postgres(# )
+postgres-# SELECT
+postgres-#     c.course_name,
+postgres-#     cs.total_enrollments
+postgres-# FROM
+postgres-#     courses c
+postgres-# JOIN
+postgres-#     course_stats cs ON c.course_id = cs.course_id
+postgres-# WHERE
+postgres-#     cs.total_enrollments > 1; -- Фильтруем курсы с более чем 1 студентом (для демонстрации)
+   course_name   | total_enrollments
+-----------------+-------------------
+ Data Structures |                 2
+
+
+postgres=#
+postgres=# -- Если оценки буквенные, можно сделать более сложный CTE с CASE для конвертации оценок в числа для AVG
+postgres=# SELECT
+postgres-#     s.first_name || ' ' || s.last_name AS student_name,
+postgres-#     c.course_name,
+postgres-#     se.grade,
+postgres-#     CASE
+postgres-#         WHEN se.grade IN ('A+', 'A', 'A-') THEN 'Excellent' -- ИСПРАВЛЕНИЕ: Добавили 'A+'
+postgres-#         WHEN se.grade IN ('B+', 'B') THEN 'Good'
+postgres-#         ELSE 'Needs Improvement'
+postgres-#     END AS performance_category
+postgres-# FROM
+postgres-#     student_enrollments se
+postgres-# JOIN
+postgres-#     students s ON se.student_id = s.student_id
+postgres-# JOIN
+postgres-#     courses c ON se.course_id = c.course_id
+postgres-# ORDER BY
+postgres-#     performance_category DESC;
+ОШИБКА:  для символа с последовательностью байт 0x98 из кодировки "WIN1251" нет эквивалента в "UTF8"
+postgres=# \encoding WIN1251
+postgres=# SELECT
+postgres-#     s.first_name || ' ' || s.last_name AS student_name,
+postgres-#     c.course_name,
+postgres-#     se.grade,
+postgres-#     CASE
+postgres-#         WHEN se.grade IN ('A+', 'A', 'A-') THEN 'Excellent'
+postgres-#         WHEN se.grade IN ('B+', 'B') THEN 'Good'
+postgres-#         ELSE 'Needs Improvement'
+postgres-#     END AS performance_category
+postgres-# FROM
+postgres-#     student_enrollments se
+postgres-# JOIN
+postgres-#     students s ON se.student_id = s.student_id
+postgres-# JOIN
+postgres-#     courses c ON se.course_id = c.course_id
+postgres-# ORDER BY
+postgres-#     performance_category DESC;
+ student_name  |         course_name         | grade | performance_category
+---------------+-----------------------------+-------+----------------------
+ Alice Johnson | Introduction to Programming | A     | Excellent
+ Carol Wilson  | Data Structures             | A     | Excellent
+ Carol Wilson  | Calculus I                  | A-    | Excellent
+ Alice Johnson | Data Structures             | A+    | Excellent
+
+
+postgres=# \q
