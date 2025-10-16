@@ -1,0 +1,60 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# SELECT course_id, course_code FROM courses WHERE course_code IN ('CS101', 'CS201');
+ course_id | course_code
+-----------+-------------
+         1 | CS101
+         2 | CS201
+
+postgres=# BEGIN;
+BEGIN
+postgres=*# DELETE FROM student_enrollments WHERE student_id = 1 AND course_id = 1;
+DELETE 1
+postgres=*# INSERT INTO student_enrollments (student_id, course_id, grade)
+postgres-*# VALUES (1, 3, 'A+');
+INSERT 0 1
+postgres=*# SELECT * FROM student_enrollments WHERE student_id = 1;
+ enrollment_id | student_id | course_id | enrollment_date | grade
+---------------+------------+-----------+-----------------+-------
+             2 |          1 |         2 | 2025-10-07      | A+
+             8 |          1 |         3 | 2025-10-16      | A+
+
+
+postgres=*# ROLLBACK;
+ROLLBACK
+postgres=# SELECT * FROM student_enrollments WHERE student_id = 1;
+ enrollment_id | student_id | course_id | enrollment_date | grade
+---------------+------------+-----------+-----------------+-------
+             1 |          1 |         1 | 2025-10-07      | A
+             2 |          1 |         2 | 2025-10-07      | A+
+
+
+postgres=# BEGIN;
+BEGIN
+postgres=*# DELETE FROM student_enrollments WHERE student_id = 1 AND course_id = 1;
+DELETE 1
+postgres=*# INSERT INTO student_enrollments (student_id, course_id, grade)
+postgres-*# VALUES (1, 3, 'A+');
+INSERT 0 1
+postgres=*# COMMIT;
+COMMIT
+postgres=# SELECT * FROM student_enrollments WHERE student_id = 1;
+ enrollment_id | student_id | course_id | enrollment_date | grade
+---------------+------------+-----------+-----------------+-------
+             2 |          1 |         2 | 2025-10-07      | A+
+             9 |          1 |         3 | 2025-10-16      | A+
+
+
+postgres=# \q
+PS C:\Users\User>
