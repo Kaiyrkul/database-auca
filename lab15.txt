@@ -1,0 +1,33 @@
+PS C:\Users\User> chcp 65001
+Active code page: 65001
+PS C:\Users\User> & "C:\Program Files\PostgreSQL\17\bin\psql.exe" -h localhost -p 5432 -U postgres -d postgres
+Пароль пользователя postgres:
+
+psql (17.6)
+ПРЕДУПРЕЖДЕНИЕ: Кодовая страница консоли (65001) отличается от основной
+                страницы Windows (1251).
+                8-битовые (русские) символы могут отображаться некорректно.
+                Подробнее об этом смотрите документацию psql, раздел
+                "Notes for Windows users".
+Введите "help", чтобы получить справку.
+
+postgres=# \copy students TO 'C:/Users/User/Desktop/students.csv' WITH (FORMAT CSV, HEADER TRUE);
+COPY 3
+postgres=# \copy (SELECT s.first_name, s.last_name, c.course_name FROM students s JOIN student_enrollments se ON s.student_id = se.student_id JOIN courses c ON se.course_id = c.course_id WHERE c.credits >= 4) TO 'C:/Users/User/Desktop/high_credit_students.csv' WITH (FORMAT CSV, HEADER TRUE);
+COPY 4
+postgres=# CREATE TABLE new_students (
+postgres(#     first_name VARCHAR(50),
+postgres(#     last_name VARCHAR(50),
+postgres(#     email VARCHAR(100)
+postgres(# );
+CREATE TABLE
+postgres=# \copy new_students FROM 'C:/Users/User/Desktop/new_students.csv' WITH (FORMAT CSV, HEADER TRUE);
+COPY 2
+postgres=# SELECT * FROM new_students;
+ first_name | last_name  |       email
+------------+------------+--------------------
+ Bermet     | Dadibaeva  | dadibaeva@new.edu
+ Aizhana    | Imamalieva | imamalieva@new.edu
+
+
+postgres=# \q
