@@ -1,4 +1,4 @@
-# 🚀 Project Management System (PMS) Database
+# Project Management System (PMS) Database
 
 ## Project Overview
 
@@ -6,7 +6,7 @@ This repository contains the final project for the Database Management Systems c
 
 The database is implemented using **PostgreSQL 17** and demonstrates proficiency in advanced SQL features, data integrity enforcement, and performance optimization.
 
-## 💡 Core Database Functionality
+## Core Database Functionality
 
 The PMS is structured around the following key relationships and data flows:
 
@@ -33,3 +33,4 @@ All SQL scripts are located in the `sql/` directory and must be executed **seque
 * **Database Management System (DBMS):** PostgreSQL 17
 * **Administration Tool:** pgAdmin 4
 * **Version Control:** Git / GitHub
+
