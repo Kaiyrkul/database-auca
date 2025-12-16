@@ -1,5 +1,5 @@
-Database |
-Official Report on Database Lab Assignments
+# Database |
+# Official Report on Database Lab Assignments
 
 Complete execution of all planned practical and laboratory assignments for the AUCA Database course.
 
